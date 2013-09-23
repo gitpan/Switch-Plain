@@ -1,14 +1,13 @@
 package Switch::Plain;
 
 use v5.14.0;
-use strict;
 use warnings;
 
 use Carp qw(croak);
 
 use XSLoader;
 BEGIN {
-	our $VERSION = '0.01';
+	our $VERSION = '0.02';
 	XSLoader::load;
 }
 
@@ -17,7 +16,9 @@ my %export = (
 	nswitch => FLAG_NSWITCH,
 );
 
-sub import {
+sub _port {
+	my $op = shift;
+
 	my $class = shift;
 
 	my @todo;
@@ -25,19 +26,16 @@ sub import {
 		push @todo, $export{$item} || croak qq{"$item" is not exported by the $class module};
 	}
 	for my $item (@todo ? @todo : values %export) {
-		$^H{+HINTK_FLAGS} |= $item;
+		$op->(\$^H{+HINTK_FLAGS}, $item);
 	}
 }
 
+sub import {
+	_port sub { ${$_[0]} |= $_[1]; }, @_;
+}
+
 sub unimport {
-	my $class = shift;
-	my @todo;
-	for my $item (@_) {
-		push @todo, $export{$item} || croak qq{"$item" is not exported by the $class module};
-	}
-	for my $item (@todo ? @todo : values %export) {
-		$^H{+HINTK_FLAGS} &= ~$item;
-	}
+	_port sub { ${$_[0]} &= ~$_[1]; }, @_;
 }
 
 'ok'
@@ -133,9 +131,11 @@ L<smartmatch operator C<~~>|perlop/Smartmatch-Operator>.
 
 This module understands the following grammar:
 
-  switch_statement := switch_keyword switch_body
+  switch_statement := switch_keyword switch_scrutinee switch_body
 
   switch_keyword := 'sswitch' | 'nswitch'
+
+  switch_scrutinee := '(' EXPR ')'
 
   switch_body := '{' case_clause* '}'
 
@@ -160,10 +160,10 @@ The meaning of a switch statement is given by the following translation rules:
 
 C<sswitch (FOO) { ... }> and C<nswitch (FOO) { ... }> turn into
 
-  {
+  do {
     local *_ = \FOO;
     ...
-  }
+  };
 
 That is, they alias L<C<$_>|perlvar/"$ARG"> to C<FOO> within the body of the switch statement.
 
@@ -214,7 +214,7 @@ Here's an example demonstrating all combinations:
 
 This is equivalent to:
 
-  {
+  do {
     # temporarily alias $_ to SCRUTINEE within this block:
     local *_ = \SCRUTINEE;
 
@@ -233,7 +233,7 @@ This is equivalent to:
     elsif (1) {
       BODY2
     }
-  }
+  };
 
 =head2 Differences between C<Switch::Plain> and C's C<switch>
 
@@ -317,7 +317,7 @@ Lukas Mai, C<< <l.mai at web.de> >>
 
 =head1 COPYRIGHT & LICENSE
 
-Copyright 2012 Lukas Mai.
+Copyright 2012-2013 Lukas Mai.
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of either: the GNU General Public License as published

@@ -1,10 +1,10 @@
 {
-   "abstract" : "unknown",
+   "abstract" : "a simple switch statement for Perl",
    "author" : [
       "Lukas Mai <l.mai@web.de>"
    ],
    "dynamic_config" : 1,
-   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.76, CPAN::Meta::Converter version 2.132620",
    "license" : [
       "perl_5"
    ],
@@ -19,6 +19,24 @@
          "inc"
       ]
    },
+   "prereqs" : {
+      "build" : {
+         "requires" : {}
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "0",
+            "XSLoader" : "0",
+            "perl" : "5.014000",
+            "warnings" : "0"
+         }
+      },
+      "test" : {
+         "requires" : {
+            "Test::More" : "0"
+         }
+      }
+   },
    "release_status" : "stable",
    "resources" : {
       "repository" : {
@@ -27,5 +45,5 @@
          "web" : "https://github.com/mauke/Switch-Plain"
       }
    },
-   "version" : "0.01"
+   "version" : "0.02"
 }
